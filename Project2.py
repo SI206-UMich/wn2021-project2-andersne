@@ -51,8 +51,14 @@ def get_search_links():
     “https://www.goodreads.com/book/show/kdkd".
 
     """
-
-    pass
+    r = requests.get('https://www.goodreads.com/search?q=fantasy&qid=NwUsLiA2Nc')
+    soup = BeautifulSoup(r.text, 'html.parser')
+    tags = soup.find_all('a', class_='bookTitle')
+    urls = []
+    for tag in tags: 
+        href = tag.get('href')
+        urls.append('https://www.goodreads.com'+href)
+    return urls[:10]
 
 
 def get_book_summary(book_url):
@@ -68,10 +74,25 @@ def get_book_summary(book_url):
     You can easily capture CSS selectors with your browser's inspector window.
     Make sure to strip() any newlines from the book title and number of pages.
     """
+    r = requests.get(book_url)
+    soup = BeautifulSoup(r.text,'html.parser')
 
-    pass
+    title_tag = soup.find('h1', id='bookTitle')
+    for tag in title_tag:
+        title = tag.strip()
 
+    name_tag = soup.find('span', itemprop='name')
+    for tag in name_tag:
+        name = tag.strip()
 
+    pages_tag = soup.find('span',itemprop='numberOfPages')
+    for pages in pages_tag:
+        page_string = pages
+    page_count = int(page_string.split(' ')[0])
+
+    return (title, name, page_count)
+
+get_book_summary('https://www.goodreads.com/book/show/6542645-fantasy-in-death?from_search=true&from_srp=true&qid=NwUsLiA2Nc&rank=2')
 def summarize_best_books(filepath):
     """
     Write a function to get a list of categories, book title and URLs from the "BEST BOOKS OF 2020"
@@ -147,30 +168,49 @@ class TestCases(unittest.TestCase):
 
     def test_get_search_links(self):
         # check that TestCases.search_urls is a list
+        test = get_search_links()
+        self.assertEqual(type(test), list)
 
         # check that the length of TestCases.search_urls is correct (10 URLs)
-
+        self.assertEqual(len(test), 10)
 
         # check that each URL in the TestCases.search_urls is a string
+        for url in test:
+            self.assertTrue(type(url)==str)
+
         # check that each URL contains the correct url for Goodreads.com followed by /book/show
-        return None 
+        for url in test:
+            self.assertTrue(url.startswith('https://www.goodreads.com/book/show/'))
 
     def test_get_book_summary(self):
         # create a local variable – summaries – a list containing the results from get_book_summary()
         # for each URL in TestCases.search_urls (should be a list of tuples)
+        summaries = []
+        for url in get_search_links():
+            summaries.append(get_book_summary(url))
 
         # check that the number of book summaries is correct (10)
+        self.assertEqual(len(summaries),10)
 
         # check that each item in the list is a tuple
+        for i in summaries:
+            self.assertTrue(type(i) == tuple)
 
         # check that each tuple has 3 elements
+        for i in summaries:
+            self.assertEqual(len(i), 3)
 
         # check that the first two elements in the tuple are string
+        for i in summaries:
+            self.assertTrue(type(i[0]) == str)
+            self.assertTrue(type(i[1]) == str)
 
         # check that the third element in the tuple, i.e. pages is an int
+        for i in summaries:
+            self.assertTrue(type(i[2]) == int)
 
         # check that the first book in the search has 337 pages
-        return 1
+        self.assertEqual(summaries[0][2], 337)
 
     def test_summarize_best_books(self):
         # call summarize_best_books and save it to a variable
