@@ -14,29 +14,25 @@ def get_titles_from_search_results(filename):
 
     [('Book title 1', 'Author 1'), ('Book title 2', 'Author 2')...]
     """
-
-    soup = BeautifulSoup(filename, 'html.parser')
-    title_tags = soup.find_all('a', class_="bookTitle")
-    author_tags = soup.find_all('a', class_="authorName")
-    title_list = []
-    author_list = []
+    file = open(filename, 'r')
+    soup = BeautifulSoup(file, 'html.parser')
+    file.close()
+    tags = soup.find_all('tr', itemtype='http://schema.org/Book')
     final = []
 
-    for tag in title_tags:
-        titles = tag.find('span')
-        for title in titles:
-            title_list.append(title.strip())
-
-    for tag in author_tags:
-        authors = tag.find('span')
-        for author in authors:
-            author_list.append(author.strip())
-
-    for i in range(len(title_list)):
-        final.append((title_list[i], author_list[i]))
-
+    for tag in tags:
+        title_tag = tag.find('a', class_='bookTitle')
+        title = title_tag.find('span')
+        for i in title:
+            final_title = i.strip()
+        author_tag = tag.find('a', class_='authorName')
+        author = author_tag.find('span')
+        for i in author:
+            final_author = i.strip()
+        final.append((final_title, final_author))
+        
+    
     return final
-
 
 def get_search_links():
     """
@@ -130,9 +126,6 @@ def summarize_best_books(filepath):
 
     return final
 
-file = open('best_books_2020.htm','r')
-summarize_best_books(file)
-file.close()
 
 def write_csv(data, filename):
     """
@@ -154,7 +147,14 @@ def write_csv(data, filename):
 
     This function should not return anything.
     """
-    pass
+
+    f = open(filename, "w")
+    write = csv.writer(f, delimiter=",")
+    write.writerow(['Book title','Author Name'])
+    for i in data:
+        write.writerow(i)
+    f.close()
+    
 
 
 def extra_credit(filepath):
@@ -173,9 +173,7 @@ class TestCases(unittest.TestCase):
 
     def test_get_titles_from_search_results(self):
         # call get_titles_from_search_results() on search_results.htm and save to a local variable
-        file = open('search_results.htm', 'r')
-        test = get_titles_from_search_results(file)
-        file.close()
+        test = get_titles_from_search_results('search_results.htm')
 
         # check that the number of titles extracted is correct (20 titles)
         self.assertTrue(len(test) == 20)
@@ -263,21 +261,28 @@ class TestCases(unittest.TestCase):
 
     def test_write_csv(self):
         # call get_titles_from_search_results on search_results.htm and save the result to a variable
+        data = get_titles_from_search_results('search_results.htm')
 
         # call write csv on the variable you saved and 'test.csv'
+        write_csv(data,'test.csv')
 
         # read in the csv that you wrote (create a variable csv_lines - a list containing all the lines in the csv you just wrote to above)
-
+        test = open('test.csv','r')
+        lines = test.readlines()
+        test.close()
 
         # check that there are 21 lines in the csv
-
+        self.assertEqual(len(lines),21)
+      
         # check that the header row is correct
+        self.assertEqual(lines[0].rstrip('\n'),'Book title,Author Name')
 
         # check that the next row is 'Harry Potter and the Deathly Hallows (Harry Potter, #7)', 'J.K. Rowling'
+        self.assertEqual(lines[1].rstrip('\n'), '"Harry Potter and the Deathly Hallows (Harry Potter, #7)",J.K. Rowling')
 
         # check that the last row is 'Harry Potter: The Prequel (Harry Potter, #0.5)', 'J.K. Rowling'
+        self.assertEqual(lines[len(lines)-1].rstrip('\n'), '"Harry Potter: The Prequel (Harry Potter, #0.5)",J.K. Rowling')
 
-        return None
 
 if __name__ == '__main__':
     print(extra_credit("extra_credit.htm"))
