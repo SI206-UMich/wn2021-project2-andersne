@@ -100,31 +100,21 @@ def summarize_best_books(filepath):
     to your list of tuples.
     """
     soup = BeautifulSoup(filepath, 'html.parser')
-    title_tags = soup.find_all('img', class_='category__winnerImage')
-    titles = []
-    for tag in title_tags: 
-        title = tag.get('alt')
-        titles.append(title.strip())
-
-    category_tags = soup.find_all('h4', class_='category__copy')
-    categories = []
-    for tag in category_tags:
-        for category in tag:
-            categories.append(category.strip())
-
-    url_tags = soup.find_all('div', class_='category clearFix')
-    urls =[]
-    for tag in url_tags:
-        url = tag.find_all('a')
-        for i in url:
-            var1 = i.get('href')
-            if var1!= 'https://www.goodreads.com/choiceawards/best-books-2020#':
-                urls.append(var1.strip())
+    tags = soup.find_all('div', class_='category clearFix')
     final = []
-    for i in range(len(titles)):
-        final.append((categories[i], titles[i], urls[i]))
-
+    for tag in tags:
+        titles = tag.find_all('img', class_="category__winnerImage")
+        for i in titles:
+            title = i.get('alt').strip()
+        categories = tag.find_all('h4', class_='category__copy')
+        for i in categories:
+            category = i.text.strip()
+        urls = tag.find('a')
+        url = urls.get('href').strip()
+        final.append((category, title, url))
+        
     return final
+
 
 
 def write_csv(data, filename):
