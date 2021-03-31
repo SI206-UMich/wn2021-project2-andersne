@@ -56,7 +56,6 @@ def get_search_links():
         urls.append('https://www.goodreads.com'+href)
     return urls[:10]
 
-
 def get_book_summary(book_url):
     """
     Write a function that creates a BeautifulSoup object that extracts book
@@ -99,7 +98,9 @@ def summarize_best_books(filepath):
     ("Fiction", "The Testaments (The Handmaid's Tale, #2)", "https://www.goodreads.com/choiceawards/best-fiction-books-2020") 
     to your list of tuples.
     """
-    soup = BeautifulSoup(filepath, 'html.parser')
+    f = open(filepath, 'r')
+    soup = BeautifulSoup(f, 'html.parser')
+    f.close()
     tags = soup.find_all('div', class_='category clearFix')
     final = []
     for tag in tags:
@@ -110,7 +111,7 @@ def summarize_best_books(filepath):
         for i in categories:
             category = i.text.strip()
         urls = tag.find('a')
-        url = urls.get('href').strip()
+        url = urls.get('href').strip() 
         final.append((category, title, url))
         
     return final
@@ -153,8 +154,25 @@ def extra_credit(filepath):
 
     Please see the instructions document for more information on how to complete this function.
     You do not have to write test cases for this function.
+
     """
-    pass
+    f = open(filepath, 'r')
+    soup = BeautifulSoup(f, 'html.parser')
+    f.close()
+    tags = soup.find_all('div', id='description')
+    chunk = []
+    for tag in tags:
+        descr = tag.find_all('span')
+        for i in descr:
+            chunk.append(i.text)
+    summary = chunk[1]
+
+    ner = []
+    ex = r'\b[A-Z][a-zA_Z]{2,}\s+[A-Z][a-zA-Z]+'
+    named_entities = re.findall(ex, summary)
+    for entity in named_entities:
+        ner.append(entity)
+    return ner
 
 class TestCases(unittest.TestCase):
 
@@ -229,9 +247,7 @@ class TestCases(unittest.TestCase):
 
     def test_summarize_best_books(self):
         # call summarize_best_books and save it to a variable
-        file = open('best_books_2020.htm','r')
-        best_books = summarize_best_books(file)
-        file.close()
+        best_books = summarize_best_books('best_books_2020.htm')
 
         # check that we have the right number of best books (20)
 
